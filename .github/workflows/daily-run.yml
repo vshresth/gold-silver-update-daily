@@ -1,5 +1,6 @@
 name: Daily Gold Silver Bot
 
+da
 on:
   schedule:
     # - cron: '0 12 * * *'  # runs at 12:00 UTC (8 AM EST)
@@ -25,3 +26,8 @@ jobs:
       - name: Run main.py
         run: |
           python main.py
+
+      - name: Deploy with Fly.io
+        run:  flyctl deploy --remote-only
+        env:
+          FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
