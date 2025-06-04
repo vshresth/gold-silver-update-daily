@@ -3,8 +3,8 @@ name: Daily Gold Silver Bot
 da
 on:
   schedule:
-    # - cron: '0 12 * * *'  # runs at 12:00 UTC (8 AM EST)
-    - cron: '*/5 * * * *'  # ✅ runs every 5 minutes for testing
+    - cron: '0 12 * * *'  # runs at 12:00 UTC (8 AM EST)
+    #- cron: '*/5 * * * *'  # ✅ runs every 5 minutes for testing
   workflow_dispatch:
 
 jobs:

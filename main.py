@@ -4,20 +4,20 @@ import json
 from datetime import datetime
 
 # === CONFIGURATION ===
-
 API_URL = "https://keyvalue.hamropatro.com/kv/get/market_segment_gold::1690855810198"
-TEMPLATE_IMAGE = "template.png"    # Your Canva image template
-FONT_PATH = "arial.ttf"            # Or use any .ttf you include
-GOLD_COORD = (680, 980)     # Below the GOLD line
-SILVER_COORD = (680, 1300)  # Below the SILVER line
-FONT_SIZE = 75              # Make text more bold/visible
+TEMPLATE_IMAGE = "template.png"
+FONT_PATH = "arial.ttf"
+GOLD_COORD = (680, 980)
+SILVER_COORD = (680, 1300)
+FONT_SIZE = 75
 TEXT_COLOR_GOLD = "#F5A623"
 TEXT_COLOR_SILVER = "#B0B0B0"
+IMGUR_CLIENT_ID = "ba7e4c37849dbee"
+
 today = datetime.now().strftime("%Y-%m-%d")
 OUTPUT_PATH = f"daily-price-{today}.png"
 
 # === FETCH GOLD & SILVER PRICE ===
-
 try:
     response = requests.get(API_URL)
     outer_json = response.json()
@@ -46,7 +46,6 @@ except Exception as e:
     silver_price = "N/A"
 
 # === GENERATE IMAGE ===
-
 try:
     img = Image.open(TEMPLATE_IMAGE).convert("RGBA")
     draw = ImageDraw.Draw(img)
@@ -60,3 +59,18 @@ try:
 
 except Exception as e:
     print(f"[ERROR] Failed to generate image: {e}")
+
+# === UPLOAD TO IMGUR ===
+def upload_to_imgur(image_path, client_id):
+    headers = {"Authorization": f"Client-ID {client_id}"}
+    with open(image_path, 'rb') as img_file:
+        res = requests.post("https://api.imgur.com/3/image", headers=headers, files={'image': img_file})
+    if res.status_code == 200:
+        url = res.json()['data']['link']
+        print(f"IMGUR_URL::{url}")  # ✅ Used by Zapier
+        return url
+    else:
+        print(f"[❌] Imgur upload failed: {res.status_code} - {res.text}")
+        return None
+
+upload_to_imgur(OUTPUT_PATH, IMGUR_CLIENT_ID)
