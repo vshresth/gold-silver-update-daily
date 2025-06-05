@@ -2,6 +2,8 @@ from PIL import Image, ImageDraw, ImageFont
 import requests
 import json
 from datetime import datetime
+from pydrive.auth import GoogleAuth
+from pydrive.drive import GoogleDrive
 
 # === CONFIGURATION ===
 API_URL = "https://keyvalue.hamropatro.com/kv/get/market_segment_gold::1690855810198"
@@ -12,11 +14,7 @@ SILVER_COORD = (680, 1300)
 FONT_SIZE = 75
 TEXT_COLOR_GOLD = "#F5A623"
 TEXT_COLOR_SILVER = "#B0B0B0"
-IMGUR_CLIENT_ID = "ba7e4c37849dbee"
-ZAPIER_WEBHOOK_URL = "https://hooks.zapier.com/hooks/catch/XXXX/YYYY"  # Replace with your Zapier webhook URL
-
-today = datetime.now().strftime("%Y-%m-%d")
-OUTPUT_PATH = f"daily-price-{today}.png"
+FILENAME = "gold-price.png"  # Use a fixed filename for consistent Drive link
 
 # === FETCH GOLD & SILVER PRICE ===
 try:
@@ -55,36 +53,32 @@ try:
     draw.text(GOLD_COORD, f"Nrs {int(gold_price)} / TOLA", fill=TEXT_COLOR_GOLD, font=font)
     draw.text(SILVER_COORD, f"Nrs {int(silver_price)} / TOLA", fill=TEXT_COLOR_SILVER, font=font)
 
-    img.save(OUTPUT_PATH)
-    print(f"[✅] Image saved as {OUTPUT_PATH}")
+    img.save(FILENAME)
+    print(f"[✅] Image saved as {FILENAME}")
 
 except Exception as e:
     print(f"[ERROR] Failed to generate image: {e}")
 
-# === UPLOAD TO IMGUR ===
-def upload_to_imgur(image_path, client_id):
-    headers = {"Authorization": f"Client-ID {client_id}"}
-    with open(image_path, 'rb') as img_file:
-        res = requests.post("https://api.imgur.com/3/image", headers=headers, files={'image': img_file})
-    if res.status_code == 200:
-        url = res.json()['data']['link']
-        print(f"IMGUR_URL::{url}")  # ✅ Used by Zapier
-        return url
+# === UPLOAD TO GOOGLE DRIVE ===
+def upload_to_drive(filename):
+    gauth = GoogleAuth()
+    gauth.LocalWebserverAuth()
+    drive = GoogleDrive(gauth)
+
+    # Your folder ID from the Google Drive folder link
+    folder_id = "1nD5OEXFN2S7QCucpF8xArTjY4aYN-bJO"
+
+    # Check if file exists in that folder
+    query = f"title='{filename}' and '{folder_id}' in parents and trashed=false"
+    file_list = drive.ListFile({'q': query}).GetList()
+    if file_list:
+        file = file_list[0]
     else:
-        print(f"[❌] Imgur upload failed: {res.status_code} - {res.text}")
-        return None
+        file = drive.CreateFile({'title': filename, 'parents': [{'id': folder_id}]})
 
-# === FINAL STEPS ===
-imgur_url = upload_to_imgur(OUTPUT_PATH, IMGUR_CLIENT_ID)
+    file.SetContentFile(filename)
+    file.Upload()
+    print(f"[✅] Uploaded {filename} to folder {folder_id}")
 
-# === SEND TO ZAPIER ===
-if imgur_url:
-    try:
-        zapier_payload = {"img_url": imgur_url}
-        zapier_response = requests.post(ZAPIER_WEBHOOK_URL, json=zapier_payload)
-        if zapier_response.status_code == 200:
-            print("[✅] Imgur URL sent to Zapier successfully.")
-        else:
-            print(f"[❌] Zapier webhook failed: {zapier_response.status_code}")
-    except Exception as e:
-        print(f"[❌] Error sending to Zapier: {e}")
+
+upload_to_drive(FILENAME)
