@@ -13,6 +13,7 @@ FONT_SIZE = 75
 TEXT_COLOR_GOLD = "#F5A623"
 TEXT_COLOR_SILVER = "#B0B0B0"
 IMGUR_CLIENT_ID = "ba7e4c37849dbee"
+ZAPIER_WEBHOOK_URL = "https://hooks.zapier.com/hooks/catch/XXXX/YYYY"  # Replace with your Zapier webhook URL
 
 today = datetime.now().strftime("%Y-%m-%d")
 OUTPUT_PATH = f"daily-price-{today}.png"
@@ -73,4 +74,17 @@ def upload_to_imgur(image_path, client_id):
         print(f"[❌] Imgur upload failed: {res.status_code} - {res.text}")
         return None
 
-upload_to_imgur(OUTPUT_PATH, IMGUR_CLIENT_ID)
+# === FINAL STEPS ===
+imgur_url = upload_to_imgur(OUTPUT_PATH, IMGUR_CLIENT_ID)
+
+# === SEND TO ZAPIER ===
+if imgur_url:
+    try:
+        zapier_payload = {"img_url": imgur_url}
+        zapier_response = requests.post(ZAPIER_WEBHOOK_URL, json=zapier_payload)
+        if zapier_response.status_code == 200:
+            print("[✅] Imgur URL sent to Zapier successfully.")
+        else:
+            print(f"[❌] Zapier webhook failed: {zapier_response.status_code}")
+    except Exception as e:
+        print(f"[❌] Error sending to Zapier: {e}")
