@@ -2,19 +2,25 @@ from PIL import Image, ImageDraw, ImageFont
 import requests
 import json
 from datetime import datetime
-from pydrive.auth import GoogleAuth
-from pydrive.drive import GoogleDrive
+import os
+
+from google.oauth2 import service_account
+from googleapiclient.discovery import build
+from googleapiclient.http import MediaFileUpload
 
 # === CONFIGURATION ===
 API_URL = "https://keyvalue.hamropatro.com/kv/get/market_segment_gold::1690855810198"
 TEMPLATE_IMAGE = "template.png"
 FONT_PATH = "arial.ttf"
+FILENAME = "gold-price.png"
+SERVICE_ACCOUNT_FILE = "service_account.json"
+DRIVE_FOLDER_ID = "1nD5OEXFN2S7QCucpF8xArTjY4aYN-bJO"
+
 GOLD_COORD = (680, 980)
 SILVER_COORD = (680, 1300)
 FONT_SIZE = 75
 TEXT_COLOR_GOLD = "#F5A623"
 TEXT_COLOR_SILVER = "#B0B0B0"
-FILENAME = "gold-price.png"  # Use a fixed filename for consistent Drive link
 
 # === FETCH GOLD & SILVER PRICE ===
 try:
@@ -23,8 +29,7 @@ try:
     value_str = outer_json["list"][0]["value"]
     data = json.loads(value_str)
 
-    gold_price = None
-    silver_price = None
+    gold_price = silver_price = None
 
     for item in data["items"]:
         if item["name"] == "HalMark Gold":
@@ -37,10 +42,10 @@ try:
                     silver_price = p["price"]["price"]
 
     if not gold_price or not silver_price:
-        raise ValueError("Could not find gold or silver price in API response")
+        raise ValueError("Missing gold or silver price")
 
 except Exception as e:
-    print(f"[ERROR] Failed to get price data: {e}")
+    print(f"[ERROR] Price fetch failed: {e}")
     gold_price = "N/A"
     silver_price = "N/A"
 
@@ -55,30 +60,41 @@ try:
 
     img.save(FILENAME)
     print(f"[✅] Image saved as {FILENAME}")
-
 except Exception as e:
-    print(f"[ERROR] Failed to generate image: {e}")
+    print(f"[ERROR] Image generation failed: {e}")
 
 # === UPLOAD TO GOOGLE DRIVE ===
-def upload_to_drive(filename):
-    gauth = GoogleAuth()
-    gauth.LocalWebserverAuth()
-    drive = GoogleDrive(gauth)
+def upload_to_drive(service_account_file, folder_id, file_path):
+    creds = service_account.Credentials.from_service_account_file(
+        service_account_file,
+        scopes=["https://www.googleapis.com/auth/drive"]
+    )
+    service = build("drive", "v3", credentials=creds)
 
-    # Your folder ID from the Google Drive folder link
-    folder_id = "1nD5OEXFN2S7QCucpF8xArTjY4aYN-bJO"
+    filename = os.path.basename(file_path)
 
-    # Check if file exists in that folder
-    query = f"title='{filename}' and '{folder_id}' in parents and trashed=false"
-    file_list = drive.ListFile({'q': query}).GetList()
-    if file_list:
-        file = file_list[0]
+    # Search for file with same name in folder
+    results = service.files().list(
+        q=f"name='{filename}' and '{folder_id}' in parents and trashed=false",
+        spaces='drive',
+        fields='files(id, name)'
+    ).execute()
+    items = results.get("files", [])
+
+    media = MediaFileUpload(file_path, mimetype="image/png", resumable=True)
+
+    if items:
+        # File exists, update it
+        file_id = items[0]["id"]
+        updated_file = service.files().update(fileId=file_id, media_body=media).execute()
+        print("✅ File updated:", updated_file["id"])
     else:
-        file = drive.CreateFile({'title': filename, 'parents': [{'id': folder_id}]})
+        # File doesn't exist, create it
+        file_metadata = {
+            "name": filename,
+            "parents": [folder_id]
+        }
+        new_file = service.files().create(body=file_metadata, media_body=media, fields="id, webViewLink").execute()
+        print("✅ File uploaded:", new_file["webViewLink"])
 
-    file.SetContentFile(filename)
-    file.Upload()
-    print(f"[✅] Uploaded {filename} to folder {folder_id}")
-
-
-upload_to_drive(FILENAME)
+upload_to_drive(SERVICE_ACCOUNT_FILE, DRIVE_FOLDER_ID, FILENAME)
