@@ -341,7 +341,9 @@ def main():
         print("❌ Video generation failed.")
         sys.exit(1)
 
-    fb_ok = post_to_facebook(OUTPUT_VIDEO, today)
+    from social_post import post_video_to_facebook, generate_forex_caption
+    caption = generate_forex_caption(today)
+    fb_ok = bool(post_video_to_facebook(OUTPUT_VIDEO, caption))
 
     cleanup()
 
@@ -353,3 +355,13 @@ def main():
 
 if __name__ == "__main__":
     main()
+
+# ============================================================
+# OVERRIDE: Use new resumable upload posting  
+# ============================================================
+def post_forex_video(video_path, today):
+    """New posting function using resumable upload"""
+    from social_post import post_video_to_facebook, generate_forex_caption
+    caption = generate_forex_caption(today)
+    result = post_video_to_facebook(video_path, caption)
+    return bool(result)

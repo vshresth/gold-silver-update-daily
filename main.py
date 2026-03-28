@@ -588,10 +588,13 @@ def main():
     # 3. Upload to Drive (get public URL for Instagram)
     video_url = upload_to_drive_and_get_url(OUTPUT_VIDEO)
 
-    # 4. Post to social media
+    # 4. Post to social media using Resumable Upload API
+    from social_post import post_video_to_facebook, generate_gold_caption
+    caption = generate_gold_caption(gold_price, silver_price)
+    fb_result = post_video_to_facebook(OUTPUT_VIDEO, caption)
     results = {
-        "instagram": post_to_instagram(video_url, gold_price, silver_price),
-        "facebook": post_to_facebook(OUTPUT_VIDEO, gold_price, silver_price),
+        "facebook": bool(fb_result),
+        "instagram": False,  # Will auto-share from FB if pages connected
     }
 
     # 5. Cleanup
@@ -611,3 +614,13 @@ def main():
 
 if __name__ == "__main__":
     main()
+
+# ============================================================
+# OVERRIDE: Use new resumable upload posting
+# ============================================================
+def post_gold_silver(video_path, gold_price, silver_price):
+    """New posting function using resumable upload"""
+    from social_post import post_video_to_facebook, generate_gold_caption
+    caption = generate_gold_caption(gold_price, silver_price)
+    result = post_video_to_facebook(video_path, caption)
+    return bool(result)
