@@ -1,61 +1,102 @@
-name: 🇳🇵 NepState Daily Gold & Silver Video
+name: 🇳🇵 NepState Daily Gold, Silver & Forex Videos
 
 on:
   schedule:
-    # Posts at 8:00 AM Nepal Time (2:15 AM UTC)
-    # Also good timing for USA morning scroll (evening NPT = USA morning)
-    - cron: "15 2 * * *"
-  workflow_dispatch:  # Allow manual trigger anytime
+    - cron: "15 1 * * *"   # 7:00 AM Nepal Time → Gold & Silver
+    - cron: "15 6 * * *"   # 12:00 PM Nepal Time → Forex
+  workflow_dispatch:
+    inputs:
+      video_type:
+        description: 'Which video to generate?'
+        required: true
+        default: 'both'
+        type: choice
+        options:
+          - both
+          - gold
+          - forex
 
 jobs:
-  post-gold-silver:
+  gold-silver:
+    name: 🥇 Gold & Silver Video
     runs-on: ubuntu-latest
     timeout-minutes: 30
-
+    if: >
+      github.event_name == 'workflow_dispatch' && 
+      (github.event.inputs.video_type == 'gold' || github.event.inputs.video_type == 'both') ||
+      (github.event_name == 'schedule' && github.event.schedule == '15 1 * * *')
     steps:
-      # 1. Checkout repo
-      - name: 📥 Checkout repository
+      - name: 📥 Checkout
         uses: actions/checkout@v4
 
-      # 2. Install FFmpeg for video compilation
       - name: 🎬 Install FFmpeg
-        run: |
-          sudo apt-get update -qq
-          sudo apt-get install -y ffmpeg
-          ffmpeg -version | head -1
+        run: sudo apt-get update -qq && sudo apt-get install -y ffmpeg
 
-      # 3. Setup Python
-      - name: 🐍 Set up Python 3.11
+      - name: 🐍 Setup Python
         uses: actions/setup-python@v5
         with:
           python-version: "3.11"
           cache: "pip"
 
-      # 4. Install dependencies
       - name: 📦 Install dependencies
-        run: |
-          python -m pip install --upgrade pip
-          pip install -r requirements.txt
+        run: pip install -r requirements.txt
 
-      # 5. Restore service account from secret
-      - name: 🔑 Set up Google credentials
-        run: |
-          echo '${{ secrets.GOOGLE_SERVICE_ACCOUNT_JSON }}' > service_account.json
+      - name: 🔑 Setup Google credentials
+        run: echo '${{ secrets.GOOGLE_SERVICE_ACCOUNT_JSON }}' > service_account.json
 
-      # 6. Run the pipeline
       - name: 🚀 Generate & Post Gold/Silver Video
         env:
           FB_ACCESS_TOKEN: ${{ secrets.FB_ACCESS_TOKEN }}
           FB_PAGE_ID: ${{ secrets.FB_PAGE_ID }}
           IG_USER_ID: ${{ secrets.IG_USER_ID }}
-          TIKTOK_ACCESS_TOKEN: ${{ secrets.TIKTOK_ACCESS_TOKEN }}
         run: python main.py
 
-      # 7. Upload video as artifact (for debugging/review)
-      - name: 📁 Save video artifact
+      - name: 📁 Save artifact
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: gold-silver-video-${{ github.run_number }}
           path: gold-silver-price.mp4
+          retention-days: 7
+
+  forex:
+    name: 💱 Forex Rate Video
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    if: >
+      github.event_name == 'workflow_dispatch' && 
+      (github.event.inputs.video_type == 'forex' || github.event.inputs.video_type == 'both') ||
+      (github.event_name == 'schedule' && github.event.schedule == '15 6 * * *')
+    steps:
+      - name: 📥 Checkout
+        uses: actions/checkout@v4
+
+      - name: 🎬 Install FFmpeg
+        run: sudo apt-get update -qq && sudo apt-get install -y ffmpeg
+
+      - name: 🐍 Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: "pip"
+
+      - name: 📦 Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: 🔑 Setup Google credentials
+        run: echo '${{ secrets.GOOGLE_SERVICE_ACCOUNT_JSON }}' > service_account.json
+
+      - name: 🚀 Generate & Post Forex Video
+        env:
+          FB_ACCESS_TOKEN: ${{ secrets.FB_ACCESS_TOKEN }}
+          FB_PAGE_ID: ${{ secrets.FB_PAGE_ID }}
+          IG_USER_ID: ${{ secrets.IG_USER_ID }}
+        run: python forex_video.py
+
+      - name: 📁 Save artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: forex-video-${{ github.run_number }}
+          path: forex-rate.mp4
           retention-days: 7
