@@ -1,17 +1,16 @@
 """
 NepState Social Media Posting via Make.com Webhook
-Sends video + caption to Make.com which posts to Facebook + Instagram
+Sends video as multipart to Make.com which posts to Facebook + Instagram
 """
 
 import requests
 import os
-import base64
 from datetime import datetime
 
 MAKE_WEBHOOK_URL = os.environ.get("MAKE_WEBHOOK_URL", "")
 
 def send_to_make(video_path, caption, video_type="gold"):
-    """Send video to Make.com webhook for posting to Facebook + Instagram"""
+    """Send video to Make.com webhook as multipart upload"""
     if not MAKE_WEBHOOK_URL:
         print("⚠️  Make.com webhook URL not set — skipping")
         return False
@@ -19,29 +18,25 @@ def send_to_make(video_path, caption, video_type="gold"):
     print(f"📤 Sending {video_type} video to Make.com...")
 
     try:
-        # Read video and encode as base64
-        with open(video_path, "rb") as f:
-            video_bytes = f.read()
-        video_b64 = base64.b64encode(video_bytes).decode("utf-8")
-
+        file_size = os.path.getsize(video_path)
         file_name = os.path.basename(video_path)
-
-        payload = {
-            "video_data": video_b64,
-            "caption": caption,
-            "file_name": file_name,
-            "video_type": video_type,
-            "timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-        }
-
-        print(f"   Video size: {len(video_bytes) / 1024:.1f} KB")
+        print(f"   Video size: {file_size / 1024:.1f} KB")
         print(f"   Sending to Make.com webhook...")
 
-        res = requests.post(
-            MAKE_WEBHOOK_URL,
-            json=payload,
-            timeout=120
-        )
+        with open(video_path, "rb") as f:
+            res = requests.post(
+                MAKE_WEBHOOK_URL,
+                files={
+                    "video": (file_name, f, "video/mp4")
+                },
+                data={
+                    "caption": caption,
+                    "video_type": video_type,
+                    "file_name": file_name,
+                    "timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+                },
+                timeout=120
+            )
 
         if res.status_code == 200:
             print(f"✅ Successfully sent to Make.com! Response: {res.text}")
