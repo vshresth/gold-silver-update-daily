@@ -127,7 +127,7 @@ def draw_gradient_bg(img, frame_num, total_frames):
         b = max(0, min(255, b))
         draw.line([(0, y), (VIDEO_WIDTH, y)], fill=(r, g, b))
 
-def draw_decorative_elements(draw, frame_num, total_frames):
+def draw_decorative_elements(img, draw, frame_num, total_frames):
     """Draw animated decorative circles and lines"""
     progress = frame_num / total_frames
 
@@ -180,7 +180,7 @@ def generate_frame(frame_num, total_frames, gold_price, silver_price, gold_24k):
     draw = ImageDraw.Draw(img)
 
     # Decorative elements
-    draw_decorative_elements(draw, frame_num, total_frames)
+    draw_decorative_elements(img, draw, frame_num, total_frames)
 
     today = datetime.now().strftime("%B %d, %Y")
     nepali_date = datetime.now().strftime("2081")  # Approximate BS year
