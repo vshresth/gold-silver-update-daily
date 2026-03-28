@@ -341,9 +341,9 @@ def main():
         print("❌ Video generation failed.")
         sys.exit(1)
 
-    from social_post import post_video_to_facebook, generate_forex_caption
+    from social_post import send_to_make, generate_forex_caption
     caption = generate_forex_caption(today)
-    fb_ok = bool(post_video_to_facebook(OUTPUT_VIDEO, caption))
+    fb_ok = send_to_make(OUTPUT_VIDEO, caption, "forex")
 
     cleanup()
 

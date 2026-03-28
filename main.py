@@ -588,13 +588,14 @@ def main():
     # 3. Upload to Drive (get public URL for Instagram)
     video_url = upload_to_drive_and_get_url(OUTPUT_VIDEO)
 
-    # 4. Post to social media using Resumable Upload API
-    from social_post import post_video_to_facebook, generate_gold_caption
+    # 4. Send to Make.com for posting to Facebook + Instagram
+    from social_post import send_to_make, generate_gold_caption
     caption = generate_gold_caption(gold_price, silver_price)
-    fb_result = post_video_to_facebook(OUTPUT_VIDEO, caption)
+    make_result = send_to_make(OUTPUT_VIDEO, caption, "gold")
     results = {
-        "facebook": bool(fb_result),
-        "instagram": False,  # Will auto-share from FB if pages connected
+        "make_webhook": make_result,
+        "facebook": make_result,
+        "instagram": make_result,
     }
 
     # 5. Cleanup
