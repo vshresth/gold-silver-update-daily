@@ -273,10 +273,26 @@ def generate_video(rates, today):
         if i % 30 == 0:
             print(f"   Frame {i}/{total_frames}...")
     print("🎞️ Compiling with FFmpeg...")
-    cmd = ["ffmpeg", "-y", "-framerate", str(FPS),
-           "-i", f"{FRAMES_DIR}/frame_%04d.png",
-           "-c:v", "libx264", "-pix_fmt", "yuv420p",
-           "-crf", "23", "-movflags", "+faststart", OUTPUT_VIDEO]
+    music_file = "background_music.mp3"
+    has_music = os.path.exists(music_file)
+    
+    if has_music:
+        print("🎵 Adding background music...")
+        cmd = ["ffmpeg", "-y", "-framerate", str(FPS),
+               "-i", f"{FRAMES_DIR}/frame_%04d.png",
+               "-stream_loop", "-1",
+               "-i", music_file,
+               "-c:v", "libx264", "-c:a", "aac",
+               "-pix_fmt", "yuv420p", "-crf", "23",
+               "-shortest",
+               "-filter:a", "volume=0.3,afade=t=in:st=0:d=1,afade=t=out:st=11:d=1",
+               "-movflags", "+faststart", OUTPUT_VIDEO]
+    else:
+        cmd = ["ffmpeg", "-y", "-framerate", str(FPS),
+               "-i", f"{FRAMES_DIR}/frame_%04d.png",
+               "-c:v", "libx264", "-pix_fmt", "yuv420p",
+               "-crf", "23", "-movflags", "+faststart", OUTPUT_VIDEO]
+    
     result = subprocess.run(cmd, capture_output=True, text=True)
     if result.returncode != 0:
         print(f"[ERROR] FFmpeg: {result.stderr}")
