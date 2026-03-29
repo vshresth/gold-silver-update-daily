@@ -13,26 +13,63 @@ GITHUB_TOKEN     = os.environ.get("GITHUB_TOKEN", "")
 GITHUB_REPO      = "vshresth/gold-silver-update-daily"
 
 def upload_to_transfer_sh(video_path, video_type="gold"):
-    """Upload video to transfer.sh - free, public, no auth needed"""
-    print("📦 Uploading video to transfer.sh for public URL...")
+    """Upload video to GitHub Release - public repo = public URL"""
+    print("📦 Uploading video to GitHub Release for public URL...")
     try:
+        headers = {
+            "Authorization": f"token {GITHUB_TOKEN}",
+            "Accept": "application/vnd.github.v3+json"
+        }
+        today = datetime.now().strftime("%Y-%m-%d")
+        tag = f"daily-{today}-{video_type}"
         file_name = os.path.basename(video_path)
-        with open(video_path, "rb") as f:
-            res = requests.put(
-                f"https://transfer.sh/{file_name}",
-                data=f,
-                headers={"Max-Days": "1"},
-                timeout=120
-            )
-        if res.status_code == 200:
-            public_url = res.text.strip()
-            print(f"✅ Video uploaded! Public URL: {public_url}")
-            return public_url
-        else:
-            print(f"[ERROR] transfer.sh failed: {res.status_code} {res.text}")
+
+        # Delete existing release with same tag
+        existing = requests.get(
+            f"https://api.github.com/repos/{GITHUB_REPO}/releases/tags/{tag}",
+            headers=headers
+        )
+        if existing.status_code == 200:
+            rel_id = existing.json()["id"]
+            requests.delete(f"https://api.github.com/repos/{GITHUB_REPO}/releases/{rel_id}", headers=headers)
+            requests.delete(f"https://api.github.com/repos/{GITHUB_REPO}/git/refs/tags/{tag}", headers=headers)
+
+        # Create release
+        create_res = requests.post(
+            f"https://api.github.com/repos/{GITHUB_REPO}/releases",
+            headers=headers,
+            json={
+                "tag_name": tag,
+                "name": f"NepState Daily {video_type.upper()} - {today}",
+                "body": "Auto-generated daily video",
+                "draft": False,
+                "prerelease": False
+            }
+        )
+        if create_res.status_code != 201:
+            print(f"[ERROR] Release failed: {create_res.json()}")
             return None
+
+        release = create_res.json()
+        upload_url = release["upload_url"].replace("{?name,label}", "")
+
+        # Upload asset
+        with open(video_path, "rb") as f:
+            upload_res = requests.post(
+                f"{upload_url}?name={file_name}",
+                headers={"Authorization": f"token {GITHUB_TOKEN}", "Content-Type": "video/mp4"},
+                data=f
+            )
+        if upload_res.status_code != 201:
+            print(f"[ERROR] Asset upload failed: {upload_res.json()}")
+            return None
+
+        public_url = upload_res.json()["browser_download_url"]
+        print(f"✅ Public URL: {public_url}")
+        return public_url
+
     except Exception as e:
-        print(f"[ERROR] transfer.sh upload failed: {e}")
+        print(f"[ERROR] GitHub release failed: {e}")
         return None
 
 
