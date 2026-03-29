@@ -23,7 +23,7 @@ def upload_to_cloudinary(video_path, video_type="gold"):
         timestamp = str(int(time.time()))
         public_id = f"nepstate_{video_type}_{datetime.now().strftime('%Y%m%d')}"
 
-        # Generate signature
+        # Generate signature — params must be alphabetical
         params_to_sign = f"public_id={public_id}&timestamp={timestamp}"
         signature = hashlib.sha1(
             f"{params_to_sign}{CLOUDINARY_API_SECRET}".encode()
@@ -37,8 +37,6 @@ def upload_to_cloudinary(video_path, video_type="gold"):
                 "timestamp": timestamp,
                 "public_id": public_id,
                 "signature": signature,
-                "overwrite": "true",
-                "resource_type": "video"
             }, files={"file": f}, timeout=120)
 
         if res.status_code == 200:
