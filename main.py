@@ -186,8 +186,10 @@ def generate_frame(frame_num, total_frames, gold_price, silver_price, gold_24k):
     # Decorative elements
     draw_decorative_elements(img, draw, frame_num, total_frames)
 
-    today = datetime.now().strftime("%B %d, %Y")
-    nepali_date = datetime.now().strftime("2081")  # Approximate BS year
+    from datetime import timezone, timedelta
+    EST = timezone(timedelta(hours=-5))  # EST (UTC-5)
+    now_est = datetime.now(EST)
+    today = now_est.strftime("%B %d, %Y")  # e.g. March 29, 2026 in EST
 
     # ── HEADER SECTION ──────────────────────────────────────
     # Logo area slide in from top

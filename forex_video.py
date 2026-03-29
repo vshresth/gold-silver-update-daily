@@ -58,7 +58,9 @@ CURRENCIES = [
 # ============================================================
 def fetch_forex_rates():
     print("📡 Fetching forex rates from Nepal Rastra Bank...")
-    today = datetime.now().strftime("%Y-%m-%d")
+    from datetime import timezone, timedelta
+    EST = timezone(timedelta(hours=-5))
+    today = datetime.now(EST).strftime("%Y-%m-%d")
     url = NRB_API.format(date=today)
     try:
         res = requests.get(url, timeout=10)

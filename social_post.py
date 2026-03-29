@@ -88,7 +88,9 @@ def send_to_make(video_path, caption, video_type="gold"):
 
 
 def generate_gold_caption(gold_price, silver_price):
-    today = datetime.now().strftime("%B %d, %Y")
+    from datetime import timezone, timedelta
+    EST = timezone(timedelta(hours=-5))
+    today = datetime.now(EST).strftime("%B %d, %Y")
     return f"""🥇 आजको सुन र चाँदीको मूल्य | Today's Gold & Silver Rate
 📅 {today}
 
