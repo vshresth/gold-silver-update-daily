@@ -88,13 +88,11 @@ def fetch_forex_rates():
 # STEP 2: GENERATE VIDEO FRAMES
 # ============================================================
 def get_font(size, bold=False):
+    """English font"""
     paths = [
-        # Local Devanagari font — highest priority
-        "NotoSansDevanagari-Bold.ttf" if bold else "NotoSansDevanagari-Regular.ttf",
-        "/usr/share/fonts/truetype/noto/NotoSansDevanagari-Bold.ttf" if bold else "/usr/share/fonts/truetype/noto/NotoSansDevanagari-Regular.ttf",
-        "/usr/share/fonts/truetype/noto/NotoSans-Bold.ttf" if bold else "/usr/share/fonts/truetype/noto/NotoSans-Regular.ttf",
         "arial.ttf",
         "/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf" if bold else "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf",
+        "/usr/share/fonts/truetype/liberation/LiberationSans-Bold.ttf" if bold else "/usr/share/fonts/truetype/liberation/LiberationSans-Regular.ttf",
     ]
     for p in paths:
         try:
@@ -102,6 +100,19 @@ def get_font(size, bold=False):
         except:
             continue
     return ImageFont.load_default()
+
+def get_nepali_font(size, bold=False):
+    """Nepali/Devanagari font"""
+    paths = [
+        "NotoSansDevanagari-Bold.ttf" if bold else "NotoSansDevanagari-Regular.ttf",
+        "/usr/share/fonts/truetype/noto/NotoSansDevanagari-Bold.ttf" if bold else "/usr/share/fonts/truetype/noto/NotoSansDevanagari-Regular.ttf",
+    ]
+    for p in paths:
+        try:
+            return ImageFont.truetype(p, size)
+        except:
+            continue
+    return get_font(size, bold)
 
 def ease_out(t):
     return 1 - (1 - min(1.0, t)) ** 3
@@ -162,8 +173,10 @@ def generate_frame(frame_num, total_frames, rates, today):
 
     # Title
     t_t = ease_out(min(1.0, max(0, (progress - 0.05) * 5)))
-    draw.text((540, 210 + h_y), "💱 FOREX EXCHANGE RATES",     font=font_title, fill=COLOR_WHITE,  anchor="mm")
-    draw.text((540, 270 + h_y), f"Nepal Rastra Bank • {today}", font=font_date,  fill=COLOR_MUTED,  anchor="mm")
+    font_title_nep = get_nepali_font(46, bold=True)
+    draw.text((540, 200 + h_y), "💱 विदेशी मुद्राको दर", font=font_title_nep, fill=COLOR_WHITE, anchor="mm")
+    draw.text((540, 255 + h_y), "Forex Exchange Rates", font=font_title, fill=COLOR_GOLD_LIGHT, anchor="mm")
+    draw.text((540, 300 + h_y), f"Nepal Rastra Bank • {today}", font=font_date,  fill=COLOR_MUTED,  anchor="mm")
 
     # Separator line
     sep_w = int(VIDEO_WIDTH * 0.85 * ease_out(min(1.0, max(0, (progress - 0.1) * 4))))
@@ -234,12 +247,12 @@ def generate_frame(frame_num, total_frames, rates, today):
         shimmer = int(8 * math.sin(progress * math.pi * 6 + i))
         buy_color = (min(255, COLOR_GREEN[0]+shimmer), min(255, COLOR_GREEN[1]+shimmer), COLOR_GREEN[2])
         draw.text((760 + row_x, y + row_h//2 - 4),
-                  f"रू {buy:,.2f}", font=font_rate, fill=buy_color, anchor="mm")
+                  f"रू {buy:,.2f}", font=get_nepali_font(34, bold=True), fill=buy_color, anchor="mm")
 
         # Sell rate — gold
         sell_color = (min(255, COLOR_GOLD_LIGHT[0]+shimmer), min(255, COLOR_GOLD_LIGHT[1]+shimmer//2), COLOR_GOLD_LIGHT[2])
         draw.text((960 + row_x, y + row_h//2 - 4),
-                  f"रू {sell:,.2f}", font=font_rate, fill=sell_color, anchor="mm")
+                  f"रू {sell:,.2f}", font=get_nepali_font(34, bold=True), fill=sell_color, anchor="mm")
 
     # ── FOOTER ───────────────────────────────────────────────
     footer_t = ease_out(min(1.0, max(0, (progress - 0.6) * 3)))
