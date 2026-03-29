@@ -157,14 +157,11 @@ def draw_decorative_elements(img, draw, frame_num, total_frames):
             draw.line([(x, y_pos), (x + 2, y_pos)], fill=(*COLOR_GOLD, alpha) if len(COLOR_GOLD) == 3 else COLOR_GOLD)
 
 def get_font(size, bold=False):
-    """Get font with Nepali Unicode support"""
+    """Get English font"""
     font_paths = [
-        # Local Devanagari font — highest priority
-        "NotoSansDevanagari-Bold.ttf" if bold else "NotoSansDevanagari-Regular.ttf",
-        "/usr/share/fonts/truetype/noto/NotoSansDevanagari-Bold.ttf" if bold else "/usr/share/fonts/truetype/noto/NotoSansDevanagari-Regular.ttf",
-        "/usr/share/fonts/truetype/noto/NotoSans-Bold.ttf" if bold else "/usr/share/fonts/truetype/noto/NotoSans-Regular.ttf",
         "arial.ttf",
         "/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf" if bold else "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf",
+        "/usr/share/fonts/truetype/liberation/LiberationSans-Bold.ttf" if bold else "/usr/share/fonts/truetype/liberation/LiberationSans-Regular.ttf",
     ]
     for path in font_paths:
         try:
@@ -172,6 +169,19 @@ def get_font(size, bold=False):
         except:
             continue
     return ImageFont.load_default()
+
+def get_nepali_font(size, bold=False):
+    """Get Nepali/Devanagari font"""
+    font_paths = [
+        "NotoSansDevanagari-Bold.ttf" if bold else "NotoSansDevanagari-Regular.ttf",
+        "/usr/share/fonts/truetype/noto/NotoSansDevanagari-Bold.ttf" if bold else "/usr/share/fonts/truetype/noto/NotoSansDevanagari-Regular.ttf",
+    ]
+    for path in font_paths:
+        try:
+            return ImageFont.truetype(path, size)
+        except:
+            continue
+    return get_font(size, bold)
 
 def generate_frame(frame_num, total_frames, gold_price, silver_price, gold_24k):
     """Generate a single video frame"""
@@ -217,7 +227,7 @@ def generate_frame(frame_num, total_frames, gold_price, silver_price, gold_24k):
     title_t = min(1.0, max(0, (progress - 0.1) * 5))
     title_t = ease_out(title_t)
     title_alpha = int(255 * title_t)
-    draw.text((540, 410), "आजको सुन-चाँदीको भाउ", font=font_title,
+    draw.text((540, 410), "आजको सुन-चाँदीको भाउ", font=get_nepali_font(52, bold=True),
               fill=COLOR_GOLD, anchor="mm")
     draw.text((540, 480), "Today's Gold & Silver Rate", font=font_title,
               fill=COLOR_WHITE, anchor="mm")
@@ -254,7 +264,7 @@ def generate_frame(frame_num, total_frames, gold_price, silver_price, gold_24k):
     draw.text((150 + gold_x, 620), "🥇", font=get_font(60), anchor="mm")
     draw.text((400 + gold_x, 605), "GOLD (Halmark)", font=font_metal,
               fill=COLOR_GOLD_LIGHT, anchor="lm")
-    draw.text((400 + gold_x, 650), "तोला / Tola", font=font_sub,
+    draw.text((400 + gold_x, 650), "तोला / Tola", font=get_nepali_font(30), fill=COLOR_MUTED, anchor="lm")
               fill=COLOR_MUTED, anchor="lm")
 
     # Price with shimmer animation
@@ -306,7 +316,7 @@ def generate_frame(frame_num, total_frames, gold_price, silver_price, gold_24k):
     )
     draw.text((540 + silver_x, 1140), f"NPR {silver_price:,}",
               font=font_price_big, fill=silver_color, anchor="mm")
-    draw.text((540 + silver_x, 1215), "per tola • चाँदी",
+    draw.text((540 + silver_x, 1215), "per tola • चाँदी", font=get_nepali_font(30), fill=COLOR_MUTED, anchor="mm") #
               font=font_sub, fill=COLOR_MUTED, anchor="mm")
 
     # ── CURRENCY HINT ────────────────────────────────────────
