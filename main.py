@@ -265,7 +265,6 @@ def generate_frame(frame_num, total_frames, gold_price, silver_price, gold_24k):
     draw.text((400 + gold_x, 605), "GOLD (Halmark)", font=font_metal,
               fill=COLOR_GOLD_LIGHT, anchor="lm")
     draw.text((400 + gold_x, 650), "तोला / Tola", font=get_nepali_font(30), fill=COLOR_MUTED, anchor="lm")
-              fill=COLOR_MUTED, anchor="lm")
 
     # Price with shimmer animation
     shimmer = int(20 * math.sin(progress * math.pi * 6))
