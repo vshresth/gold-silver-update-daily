@@ -212,10 +212,10 @@ def generate_frame(frame_num, total_frames, gold_price, silver_price, gold_24k):
     title_t = min(1.0, max(0, (progress - 0.1) * 5))
     title_t = ease_out(title_t)
     title_alpha = int(255 * title_t)
-    draw.text((540, 420), "TODAY'S PRECIOUS", font=font_title,
-              fill=(*COLOR_WHITE[:3], title_alpha) if len(COLOR_WHITE) > 3 else COLOR_WHITE, anchor="mm")
-    draw.text((540, 490), "METAL RATES", font=font_title,
+    draw.text((540, 410), "आजको सुन-चाँदीको भाउ", font=font_title,
               fill=COLOR_GOLD, anchor="mm")
+    draw.text((540, 480), "Today's Gold & Silver Rate", font=font_title,
+              fill=COLOR_WHITE, anchor="mm")
 
     # ── GOLD SECTION ────────────────────────────────────────
     gold_t = min(1.0, max(0, (progress - 0.15) * 4))

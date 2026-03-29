@@ -2,8 +2,8 @@ name: 🇳🇵 NepState Daily Gold, Silver & Forex Videos
 
 on:
   schedule:
-    - cron: "15 1 * * *"   # 7:00 AM Nepal Time → Gold & Silver
-    - cron: "15 6 * * *"   # 12:00 PM Nepal Time → Forex
+    - cron: "0 13 * * *"   # 8:00 AM EST → Gold & Silver
+    - cron: "0 23 * * *"   # 6:00 PM EST → Forex
   workflow_dispatch:
     inputs:
       video_type:
@@ -26,7 +26,7 @@ jobs:
     if: >
       github.event_name == 'workflow_dispatch' && 
       (github.event.inputs.video_type == 'gold' || github.event.inputs.video_type == 'both') ||
-      (github.event_name == 'schedule' && github.event.schedule == '15 1 * * *')
+      (github.event_name == 'schedule' && github.event.schedule == '0 13 * * *')
     steps:
       - name: 📥 Checkout
         uses: actions/checkout@v4
@@ -74,7 +74,7 @@ jobs:
     if: >
       github.event_name == 'workflow_dispatch' && 
       (github.event.inputs.video_type == 'forex' || github.event.inputs.video_type == 'both') ||
-      (github.event_name == 'schedule' && github.event.schedule == '15 6 * * *')
+      (github.event_name == 'schedule' && github.event.schedule == '0 23 * * *')
     steps:
       - name: 📥 Checkout
         uses: actions/checkout@v4
