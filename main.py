@@ -157,8 +157,12 @@ def draw_decorative_elements(img, draw, frame_num, total_frames):
             draw.line([(x, y_pos), (x + 2, y_pos)], fill=(*COLOR_GOLD, alpha) if len(COLOR_GOLD) == 3 else COLOR_GOLD)
 
 def get_font(size, bold=False):
-    """Get font with fallback"""
+    """Get font with Nepali Unicode support"""
     font_paths = [
+        # Noto fonts support Nepali/Devanagari
+        "/usr/share/fonts/truetype/noto/NotoSans-Bold.ttf" if bold else "/usr/share/fonts/truetype/noto/NotoSans-Regular.ttf",
+        "/usr/share/fonts/opentype/noto/NotoSansCJK-Bold.ttc" if bold else "/usr/share/fonts/opentype/noto/NotoSansCJK-Regular.ttc",
+        "/usr/share/fonts/truetype/noto/NotoSansDevanagari-Bold.ttf" if bold else "/usr/share/fonts/truetype/noto/NotoSansDevanagari-Regular.ttf",
         "arial.ttf",
         "/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf" if bold else "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf",
         "/usr/share/fonts/truetype/liberation/LiberationSans-Bold.ttf" if bold else "/usr/share/fonts/truetype/liberation/LiberationSans-Regular.ttf",
