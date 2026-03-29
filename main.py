@@ -315,8 +315,7 @@ def generate_frame(frame_num, total_frames, gold_price, silver_price, gold_24k):
     )
     draw.text((540 + silver_x, 1140), f"NPR {silver_price:,}",
               font=font_price_big, fill=silver_color, anchor="mm")
-    draw.text((540 + silver_x, 1215), "per tola • चाँदी", font=get_nepali_font(30), fill=COLOR_MUTED, anchor="mm") #
-              font=font_sub, fill=COLOR_MUTED, anchor="mm")
+    draw.text((540 + silver_x, 1215), "per tola • चाँदी", font=get_nepali_font(30), fill=COLOR_MUTED, anchor="mm")
 
     # ── CURRENCY HINT ────────────────────────────────────────
     currency_t = min(1.0, max(0, (progress - 0.4) * 3))
